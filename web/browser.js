@@ -359,4 +359,67 @@
     },
     { capture: true, passive: false }
   );
+
+  /* ---------------------------------------------------------------- *
+   * Luz ambiente: pega a arte do título em destaque (tela inicial ou   *
+   * detalhes) e usa ela desfocada atrás da interface (web/theme.css).  *
+   * ---------------------------------------------------------------- */
+  var ambient = null;
+  var ambientLayers = [];
+  var ambientIndex = 0;
+  var ambientUrl = "";
+
+  function ensureAmbient() {
+    if (ambient && document.body.contains(ambient)) return;
+    ambient = document.createElement("div");
+    ambient.id = "nvAmbient";
+    ambient.setAttribute("aria-hidden", "true");
+    ambientLayers = [document.createElement("i"), document.createElement("i")];
+    ambientLayers.forEach(function (l) {
+      ambient.appendChild(l);
+    });
+    document.body.insertBefore(ambient, document.body.firstChild);
+  }
+
+  function urlFromBackground(el) {
+    var bg = el ? getComputedStyle(el).backgroundImage : "";
+    var m = bg && bg.match(/url\(["']?([^"')]+)["']?\)/);
+    return m ? m[1] : "";
+  }
+
+  function currentArtwork() {
+    if (inPlayer()) return "";
+    var img = document.querySelector(".home-hero-backdrop");
+    if (img && img.currentSrc && img.offsetParent) return img.currentSrc;
+    var detail = document.querySelector(".series-detail-backdrop");
+    if (detail && detail.offsetParent) {
+      var u = urlFromBackground(detail);
+      if (u) return u;
+      var di = detail.querySelector("img");
+      if (di && di.currentSrc) return di.currentSrc;
+    }
+    return ambientUrl; // mantém a última nas outras telas
+  }
+
+  function updateAmbient() {
+    if (!document.body) return;
+    ensureAmbient();
+    var url = currentArtwork();
+    ambient.style.display = inPlayer() ? "none" : "";
+    if (!url || url === ambientUrl) return;
+    ambientUrl = url;
+    var next = ambientLayers[ambientIndex];
+    var prev = ambientLayers[1 - ambientIndex];
+    var probe = new Image();
+    probe.onload = function () {
+      if (ambientUrl !== url) return;
+      next.style.backgroundImage = 'url("' + url.replace(/"/g, '\\"') + '")';
+      next.classList.add("on");
+      prev.classList.remove("on");
+      ambientIndex = 1 - ambientIndex;
+    };
+    probe.src = url;
+  }
+
+  setInterval(updateAmbient, 700);
 })();

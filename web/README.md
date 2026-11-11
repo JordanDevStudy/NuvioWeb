@@ -13,6 +13,10 @@ arquivos originais, então a atualização diária a partir do oficial não dá 
   escala para caber em qualquer janela.
 - `browser.js` — traduz mouse/teclado do PC para o controle da TV (veja os atalhos abaixo),
   fecha o menu lateral quando o mouse sai dele e deixa a barra de tempo clicável.
+- `theme.css` — tema moderno (só a pele, sem mudar o layout): no tema Padrão usa as
+  cores da marca Nuvio (azul-marinho + gradiente ciano → violeta); nos outros temas de
+  Aparência segue a cor escolhida. Inclui a luz ambiente (a arte em destaque desfocada
+  atrás da interface), vidro fosco no menu/diálogos e o anel em gradiente no card em foco.
 - `../web.properties` — configuração pública dos servidores do Nuvio.
 - `../.github/workflows/pages.yml` — puxa o oficial, compila e publica no GitHub Pages
   (a cada push, todo dia de madrugada, ou manual em Actions > Run workflow).

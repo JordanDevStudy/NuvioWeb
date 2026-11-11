@@ -1,0 +1,350 @@
+/*
+ * Nuvio Web — tema moderno para o navegador.
+ *
+ * Camada de CSS carregada DEPOIS do CSS oficial. Não muda o layout das telas,
+ * só a pele: cores, tipografia, foco, vidro e luz ambiente.
+ *
+ * - Tema "Padrão" (WHITE) do Nuvio vira a paleta da marca: azul-marinho do
+ *   fundo do logo + gradiente ciano → índigo → violeta.
+ * - Nos outros temas (Aparência > Tema) a estrutura continua, mas as cores
+ *   seguem o tema escolhido.
+ * - A luz ambiente (#nvAmbient) é criada por web/browser.js a partir da arte
+ *   do título em destaque.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Tokens                                                              */
+/* ------------------------------------------------------------------ */
+:root {
+  --nv-ink: var(--bg-color);
+  --nv-line: rgba(255, 255, 255, 0.09);
+  --nv-glass: rgba(18, 20, 32, 0.62);
+  --nv-glass-strong: rgba(14, 16, 27, 0.82);
+  --nv-grad: var(--player-accent-gradient, var(--secondary-color));
+  --nv-glow: rgb(var(--secondary-color-rgb) / 0.38);
+  --nv-display: "DM Sans", "Inter", system-ui, sans-serif;
+  --nv-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Tema padrão = cores da marca Nuvio (o !important vence o estilo inline do app). */
+html[data-nuvio-theme="WHITE"] {
+  --bg-color: #0b0d18 !important;
+  --bg-color-rgb: 11 13 24 !important;
+  --bg-color-rgb-legacy: 11, 13, 24 !important;
+  --bg-elevated: #141829 !important;
+  --bg-elevated-rgb: 20 24 41 !important;
+  --card-bg: #1b2034 !important;
+  --card-bg-rgb: 27 32 52 !important;
+  --focus-bg: #262c48 !important;
+  --border-color: #2a3050 !important;
+  --text-secondary: #a9aec6 !important;
+  --text-tertiary: #7d839e !important;
+  --secondary-color: #f2efff !important;
+  --secondary-color-rgb: 242 239 255 !important;
+  --on-secondary: #0b0d18 !important;
+  --focus-color: #f2efff !important;
+  --accent-gradient: linear-gradient(115deg, #46d4e6 0%, #5a6bf0 50%, #b64df5 100%) !important;
+  --player-accent-gradient: linear-gradient(
+    115deg,
+    #46d4e6 0%,
+    #5a6bf0 50%,
+    #b64df5 100%
+  ) !important;
+  --nv-glow: rgb(150 90 245 / 0.5);
+  --nv-glass: rgba(16, 19, 36, 0.6);
+  --nv-glass-strong: rgba(12, 14, 28, 0.84);
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+html {
+  background: var(--bg-color);
+}
+body {
+  background: transparent !important;
+}
+
+::selection {
+  background: rgb(var(--secondary-color-rgb) / 0.3);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+/* Luz ambiente: a arte em destaque, desfocada, por trás da interface. */
+#nvAmbient {
+  position: fixed;
+  inset: -12%;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+#nvAmbient > i {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(90px) saturate(1.6) brightness(0.55);
+  opacity: 0;
+  transition: opacity 900ms var(--nv-ease);
+  transform: translateZ(0);
+}
+#nvAmbient > i.on {
+  opacity: 0.55;
+}
+/* Fundos chapados das telas viram transparentes para a luz aparecer. */
+.home-shell,
+.home-hero-card,
+.home-modern-hero-card,
+.series-detail-shell {
+  background-color: transparent !important;
+}
+
+/* A arte do topo da tela inicial se dissolve na luz (em vez de terminar
+   num degradê até a cor de fundo, o que deixava uma "caixa" visível). */
+.home-hero-backdrop-wrap {
+  background-color: transparent !important;
+}
+.home-modern-hero-media {
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.55) 22%, #000 48%),
+    linear-gradient(180deg, #000 55%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.55) 22%, #000 48%),
+    linear-gradient(180deg, #000 55%, transparent 100%);
+  mask-composite: intersect;
+}
+.home-modern-hero-media::before,
+.home-modern-hero-media::after {
+  background: none !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tipografia                                                          */
+/* ------------------------------------------------------------------ */
+.home-hero-title-text,
+.series-detail-title {
+  font-family: var(--nv-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  text-wrap: balance;
+  text-shadow: 0 6px 32px rgba(0, 0, 0, 0.45);
+}
+
+.home-row-title {
+  font-family: var(--nv-display);
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  color: var(--text-color);
+}
+
+.home-hero-description,
+.detail-synopsis-preview {
+  color: rgba(238, 240, 250, 0.82);
+  text-wrap: pretty;
+}
+
+/* ------------------------------------------------------------------ */
+/* Foco nos cards: anel no gradiente da marca + brilho colorido        */
+/* ------------------------------------------------------------------ */
+.home-content-card .home-poster-frame,
+.series-episode-card,
+.home-content-card {
+  transition:
+    box-shadow 220ms var(--nv-ease),
+    filter 220ms var(--nv-ease),
+    height 180ms ease-out;
+}
+
+.home-screen-shell .home-poster-card.focused .home-poster-frame,
+.home-screen-shell.home-layout-modern .home-poster-card.focused .home-poster-frame {
+  border-color: transparent !important;
+  box-shadow:
+    0 0 0 2px var(--bg-color),
+    0 0 0 4px rgb(var(--secondary-color-rgb) / 0.95),
+    0 18px 50px -14px var(--nv-glow),
+    0 10px 30px -10px rgba(0, 0, 0, 0.8) !important;
+}
+
+html[data-nuvio-theme="WHITE"] .home-screen-shell .home-poster-card.focused .home-poster-frame {
+  box-shadow:
+    0 0 0 2px var(--bg-color),
+    0 18px 50px -12px var(--nv-glow),
+    0 10px 30px -10px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Anel em gradiente (só no tema padrão): uma moldura atrás do pôster. */
+html[data-nuvio-theme="WHITE"] .home-screen-shell .home-poster-card .home-poster-frame {
+  position: relative;
+}
+html[data-nuvio-theme="WHITE"] .home-screen-shell .home-poster-card .home-poster-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 3px;
+  background: var(--nv-grad);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 200ms var(--nv-ease);
+  pointer-events: none;
+}
+html[data-nuvio-theme="WHITE"]
+  .home-screen-shell
+  .home-poster-card.focused
+  .home-poster-frame::after {
+  opacity: 1;
+}
+
+/* Cards fora de foco ficam um pouco mais quietos quando há um em foco. */
+.home-track:has(.focused) .home-poster-card:not(.focused) .home-poster-frame {
+  filter: brightness(0.82) saturate(0.9);
+}
+
+.series-episode-card {
+  border-radius: 18px;
+}
+.series-episode-card.focused {
+  box-shadow:
+    0 0 0 2px var(--bg-color),
+    0 0 0 4px rgb(var(--secondary-color-rgb) / 0.95),
+    0 22px 50px -16px var(--nv-glow) !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Menu lateral: vidro fosco                                           */
+/* ------------------------------------------------------------------ */
+.home-sidebar {
+  transition:
+    background-color 260ms var(--nv-ease),
+    box-shadow 260ms var(--nv-ease);
+}
+.has-expanded-sidebar .home-sidebar,
+.home-sidebar.expanded {
+  background: var(--nv-glass-strong) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  backdrop-filter: blur(28px) saturate(1.4);
+  box-shadow:
+    1px 0 0 var(--nv-line),
+    30px 0 80px -20px rgba(0, 0, 0, 0.7);
+}
+.home-shell.has-expanded-sidebar::before {
+  background: rgba(5, 6, 12, 0.45) !important;
+}
+.home-nav-item {
+  border-radius: 999px;
+  transition:
+    background 200ms var(--nv-ease),
+    color 200ms var(--nv-ease);
+}
+.home-nav-item.focused {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+.has-expanded-sidebar .home-nav-item.selected:not(.focused) {
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: var(--text-color) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+}
+.has-expanded-sidebar .home-nav-item.selected:not(.focused) * {
+  color: var(--text-color) !important;
+}
+html[data-nuvio-theme="WHITE"] .has-expanded-sidebar .home-nav-item.focused {
+  background: var(--nv-grad) !important;
+  color: #fff !important;
+}
+html[data-nuvio-theme="WHITE"] .has-expanded-sidebar .home-nav-item.focused * {
+  color: #fff !important;
+  fill: #fff;
+}
+
+/* ------------------------------------------------------------------ */
+/* Botões da página de detalhes                                        */
+/* ------------------------------------------------------------------ */
+.series-circle-btn:not(.focused),
+.series-secondary-btn:not(.focused),
+.series-season-btn:not(.focused):not(.selected) {
+  background: rgba(255, 255, 255, 0.08) !important;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+html[data-nuvio-theme="WHITE"] .series-primary-btn {
+  background: var(--nv-grad) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 34px -12px var(--nv-glow);
+  transition:
+    box-shadow 200ms var(--nv-ease),
+    filter 200ms var(--nv-ease);
+}
+html[data-nuvio-theme="WHITE"] .series-primary-btn * {
+  color: #fff !important;
+  fill: #fff !important;
+}
+html[data-nuvio-theme="WHITE"] .series-primary-btn.focused {
+  box-shadow:
+    0 0 0 2px var(--bg-color),
+    0 0 0 4px #f2efff,
+    0 16px 44px -10px var(--nv-glow) !important;
+  filter: brightness(1.08);
+}
+
+/* ------------------------------------------------------------------ */
+/* Diálogos e menus (vidro)                                            */
+/* ------------------------------------------------------------------ */
+.nuvio-dialog-panel {
+  background: var(--nv-glass-strong) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(1.4);
+  backdrop-filter: blur(30px) saturate(1.4);
+  border: 1px solid var(--nv-line) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 40px 120px -30px rgba(0, 0, 0, 0.85) !important;
+}
+.nuvio-dialog-button {
+  border-radius: 999px !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Player                                                              */
+/* ------------------------------------------------------------------ */
+.player-progress-track {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-radius: 999px !important;
+  overflow: hidden;
+}
+html[data-nuvio-theme="WHITE"] .player-progress-fill {
+  background: var(--nv-grad) !important;
+  box-shadow: 0 0 18px var(--nv-glow);
+}
+html[data-nuvio-theme="WHITE"] .player-control-btn.is-primary {
+  background: var(--nv-grad) !important;
+}
+html[data-nuvio-theme="WHITE"]
+  .player-control-btn.is-primary
+  .player-control-icon:not(.player-control-icon-mask) {
+  filter: brightness(0) invert(1);
+}
+
+/* ------------------------------------------------------------------ */
+/* Movimento reduzido                                                  */
+/* ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  #nvAmbient > i {
+    transition: none;
+  }
+  .home-content-card .home-poster-frame,
+  .series-episode-card,
+  .home-nav-item {
+    transition: none !important;
+  }
+}

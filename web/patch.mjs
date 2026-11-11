@@ -92,9 +92,13 @@ async function postbuild() {
   await rename(path.join(dist, "index.html"), path.join(dist, "app.html"));
   let app = await readFile(path.join(dist, "app.html"), "utf8");
   app = app.replace("<title>Nuvio TV</title>", "<title>Nuvio</title>");
-  app = app.replace("</head>", '    <script src="web-browser.js"></script>\n  </head>');
+  app = app.replace(
+    "</head>",
+    '    <link rel="stylesheet" href="web-theme.css" />\n    <script src="web-browser.js"></script>\n  </head>'
+  );
   await writeFile(path.join(dist, "app.html"), app);
   await copyFile(path.join(root, "web", "browser.js"), path.join(dist, "web-browser.js"));
+  await copyFile(path.join(root, "web", "theme.css"), path.join(dist, "web-theme.css"));
   await copyFile(path.join(root, "web", "index.html"), path.join(dist, "index.html"));
   await writeFile(path.join(dist, ".nojekyll"), "");
   console.log("Nuvio Web: postbuild ok");
