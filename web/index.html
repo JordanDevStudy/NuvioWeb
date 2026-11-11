@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nuvio</title>
+    <link rel="icon" type="image/png" href="assets/brand/app_logo_mark.png" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0d0d0d;
+      }
+      #app {
+        position: fixed;
+        left: 0;
+        top: 0;
+        border: 0;
+        transform-origin: 0 0;
+        background: #0d0d0d;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+  Nuvio Web (navegador do PC)
+
+  O Nuvio foi feito para TV: o layout é medido pela largura da tela e espera
+  uma tela 16:9 de pelo menos ~1920x960. No navegador a janela costuma ser
+  menor e mais "larga" (abas e barra de endereço comem altura), então o
+  conteúdo ficava gigante e cortado.
+
+  Aqui o app roda dentro de uma "tela virtual" de no mínimo 1920x960, no mesmo
+  formato da janela, que é reduzida (ou ampliada) para caber certinho.
+  O app em si fica em app.html.
+-->
+    <iframe
+      id="app"
+      title="Nuvio"
+      allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+    <script>
+      (function () {
+        var MIN_W = 1920,
+          MIN_H = 960;
+        var frame = document.getElementById("app");
+
+        function scale() {
+          var z = Math.min(innerWidth / MIN_W, innerHeight / MIN_H);
+          if (z > 0.97 && z < 1.03) z = 1; // já está no tamanho certo: evita borrar o texto
+          return Math.max(0.3, Math.min(z, 2));
+        }
+
+        function fit() {
+          var z = scale();
+          frame.style.width = Math.round(innerWidth / z) + "px";
+          frame.style.height = Math.round(innerHeight / z) + "px";
+          frame.style.transform = z === 1 ? "none" : "scale(" + z + ")";
+        }
+
+        function focusApp() {
+          try {
+            frame.contentWindow.focus();
+          } catch (e) {}
+        }
+
+        // Mantém o título da aba igual ao do app
+        function syncTitle() {
+          try {
+            var t = frame.contentDocument && frame.contentDocument.title;
+            if (t) document.title = t.replace(/\s*TV$/, "");
+          } catch (e) {}
+        }
+
+        fit();
+        addEventListener("resize", fit);
+        addEventListener("focus", focusApp);
+        frame.addEventListener("load", function () {
+          focusApp();
+          syncTitle();
+        });
+        setInterval(syncTitle, 2000);
+
+        frame.src = "app.html" + location.search + location.hash;
+      })();
+    </script>
+  </body>
+</html>

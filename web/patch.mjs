@@ -1,0 +1,60 @@
+// Nuvio Web — adapta o build oficial (feito para TV) para o navegador do PC.
+//
+// Tudo que é específico do site fica nesta pasta web/, sem editar os arquivos
+// originais do Nuvio. Assim a atualização automática a partir do repositório
+// oficial nunca dá conflito.
+//
+//   node web/patch.mjs prebuild   -> ajusta o código-fonte antes do build
+//   node web/patch.mjs postbuild  -> monta o site final em dist/
+import { readFile, writeFile, copyFile, rename } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const dist = path.join(root, "dist");
+
+async function replaceInFile(file, edits) {
+  const full = path.join(root, file);
+  let text = await readFile(full, "utf8");
+  for (const [from, to] of edits) {
+    if (text.includes(to)) continue; // já aplicado
+    if (!text.includes(from)) {
+      console.warn(
+        `::warning::Nuvio Web: trecho não encontrado em ${file} (o código oficial mudou?): ${from.slice(0, 60)}`
+      );
+      continue;
+    }
+    text = text.split(from).join(to);
+  }
+  await writeFile(full, text);
+}
+
+async function prebuild() {
+  // O suporte a mouse (hover, clique) existe no Nuvio, mas só liga no webOS
+  // (Magic Remote da LG). Liga também no navegador.
+  await replaceInFile("js/ui/navigation/focusEngine.js", [
+    ["Platform.isWebOS()", "(Platform.isWebOS() || Platform.isBrowser())"]
+  ]);
+  console.log("Nuvio Web: prebuild ok");
+}
+
+async function postbuild() {
+  // O app vira app.html; o index.html passa a ser o "encaixe" que ajusta a escala.
+  await rename(path.join(dist, "index.html"), path.join(dist, "app.html"));
+  let app = await readFile(path.join(dist, "app.html"), "utf8");
+  app = app.replace("<title>Nuvio TV</title>", "<title>Nuvio</title>");
+  app = app.replace("</head>", '    <script src="web-browser.js"></script>\n  </head>');
+  await writeFile(path.join(dist, "app.html"), app);
+  await copyFile(path.join(root, "web", "browser.js"), path.join(dist, "web-browser.js"));
+  await copyFile(path.join(root, "web", "index.html"), path.join(dist, "index.html"));
+  await writeFile(path.join(dist, ".nojekyll"), "");
+  console.log("Nuvio Web: postbuild ok");
+}
+
+const step = process.argv[2];
+if (step === "prebuild") await prebuild();
+else if (step === "postbuild") await postbuild();
+else {
+  console.error("uso: node web/patch.mjs prebuild|postbuild");
+  process.exit(1);
+}

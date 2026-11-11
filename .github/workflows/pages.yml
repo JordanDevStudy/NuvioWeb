@@ -47,7 +47,9 @@ jobs:
         run: |
           cp web.properties local.properties
           npm ci --no-audit --no-fund
+          node web/patch.mjs prebuild
           npm run build
+          node web/patch.mjs postbuild
 
       - uses: actions/configure-pages@v5
 
