@@ -1,0 +1,59 @@
+name: Publicar Nuvio Web
+
+# Roda quando você faz push, toda madrugada, ou manualmente (aba Actions > Run workflow).
+# Antes de compilar, puxa a versão mais nova do Nuvio oficial, então o site se atualiza sozinho.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 7 * * *" # ~04:17 em São Paulo
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Puxar a versão mais nova do Nuvio oficial
+        run: |
+          git remote add upstream https://github.com/NuvioMedia/NuvioTVSmart.git
+          git fetch upstream main
+          git -c user.name=bot -c user.email=bot@localhost merge --no-edit upstream/main || {
+            echo "::warning::Conflito ao atualizar com o oficial; publicando a versão atual do fork."
+            git merge --abort
+          }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Compilar
+        run: |
+          cp web.properties local.properties
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
