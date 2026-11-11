@@ -180,32 +180,8 @@ body {
     0 10px 30px -10px rgba(0, 0, 0, 0.8) !important;
 }
 
-/* Anel em gradiente (só no tema padrão): uma moldura atrás do pôster. */
 .home-screen-shell .home-poster-card .home-poster-frame {
   position: relative;
-}
-.home-screen-shell .home-poster-card .home-poster-frame::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  border-radius: inherit;
-  padding: 3px;
-  background: var(--nv-grad);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 200ms var(--nv-ease);
-  pointer-events: none;
-}
-html[data-nuvio-theme="WHITE"]
-  .home-screen-shell
-  .home-poster-card.focused
-  .home-poster-frame::after {
-  opacity: 1;
 }
 
 /* Cards fora de foco ficam um pouco mais quietos quando há um em foco. */
@@ -221,6 +197,149 @@ html[data-nuvio-theme="WHITE"]
     0 0 0 2px var(--bg-color),
     0 0 0 4px rgb(var(--secondary-color-rgb) / 0.95),
     0 22px 50px -16px var(--nv-glow) !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Cards horizontais e "Continuar assistindo"                          */
+/* ------------------------------------------------------------------ */
+.home-continue-media,
+.home-screen-shell .home-poster-card .home-poster-frame {
+  border-radius: 18px !important;
+  transition:
+    transform 260ms var(--nv-ease),
+    box-shadow 260ms var(--nv-ease),
+    filter 260ms var(--nv-ease) !important;
+}
+
+/* Card em foco: sobe um pouco, ganha anel na cor do tema e brilho.
+   (O ::after do .home-continue-media e do pôster já são usados pelo app para
+   escurecer a imagem/efeito de profundidade; o anel usa outros elementos.) */
+.home-screen-shell.home-layout-modern .home-track {
+  padding-top: 14px;
+  margin-top: -14px;
+}
+.home-continue-card,
+.home-screen-shell .home-poster-card {
+  transition: transform 260ms var(--nv-ease) !important;
+}
+.home-continue-card.focused,
+.home-screen-shell .home-poster-card.focused {
+  transform: translateY(-6px) !important;
+}
+.home-continue-card.focused .home-continue-media,
+.home-screen-shell .home-poster-card.focused .home-poster-frame {
+  border-color: transparent !important;
+  box-shadow:
+    0 22px 48px -18px var(--nv-glow),
+    0 14px 30px -14px rgba(0, 0, 0, 0.9) !important;
+}
+
+.home-continue-card {
+  position: relative;
+}
+.home-continue-card::after,
+.home-screen-shell .home-poster-card:not(.home-poster-card-loading) .home-poster-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: 18px;
+  padding: 3px;
+  background: var(--nv-grad);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 220ms var(--nv-ease);
+  pointer-events: none;
+}
+.home-continue-card.focused::after,
+.home-screen-shell
+  .home-poster-card.focused:not(.home-poster-card-loading)
+  .home-poster-frame::before {
+  opacity: 1;
+}
+
+/* Os outros cards da fileira ficam mais quietos para o foco aparecer. */
+.home-track:has(.focused) > .home-content-card:not(.focused) .home-continue-media,
+.home-track:has(.focused) > .home-content-card:not(.focused) .home-poster-frame {
+  filter: brightness(0.7) saturate(0.85);
+}
+
+/* Etiqueta ("24 minutos restantes", "Próximo episódio"): pílula de vidro. */
+.home-continue-badge {
+  background: rgba(10, 12, 22, 0.5) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px !important;
+  padding-left: 0.75em !important;
+  padding-right: 0.75em !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+}
+
+/* Textos do card */
+.home-continue-title {
+  font-family: var(--nv-display);
+  font-weight: 700 !important;
+  letter-spacing: -0.015em;
+}
+.home-continue-kicker {
+  color: rgb(var(--secondary-color-rgb) / 0.9) !important;
+  font-weight: 700 !important;
+}
+html[data-nuvio-theme="WHITE"] .home-continue-kicker {
+  color: #8fe3ef !important;
+}
+
+/* Barra de progresso: trilho fino e preenchimento na cor do tema, com brilho. */
+.home-continue-progress {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-radius: 999px !important;
+  overflow: hidden;
+}
+.home-continue-progress > * {
+  background: var(--nv-grad) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 0 12px var(--nv-glow);
+}
+
+/* ------------------------------------------------------------------ */
+/* Topo em tela cheia                                                  */
+/* ------------------------------------------------------------------ */
+/* Logo do título com sombra para destacar da arte. */
+.home-hero-brand img,
+.home-hero-brand {
+  filter: drop-shadow(0 8px 28px rgba(0, 0, 0, 0.55));
+}
+/* "24 minutos restantes" vira uma pílula na cor do tema. */
+.home-modern-hero-highlight {
+  display: inline-flex !important;
+  align-items: center;
+  width: fit-content;
+  gap: 0.5em;
+  padding: 0.35em 0.9em !important;
+  border-radius: 999px;
+  background: rgb(var(--secondary-color-rgb) / 0.16);
+  border: 1px solid rgb(var(--secondary-color-rgb) / 0.35);
+  color: var(--text-color) !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+html[data-nuvio-theme="WHITE"] .home-modern-hero-highlight {
+  background: linear-gradient(115deg, rgb(70 212 230 / 0.22), rgb(182 77 245 / 0.22));
+  border-color: rgb(160 130 255 / 0.4);
+}
+.home-modern-hero-meta-line {
+  color: rgba(238, 240, 250, 0.78);
+}
+
+/* Fileiras: título maior, mais presença. */
+.home-row-title {
+  font-size: 1.12em !important;
 }
 
 /* ------------------------------------------------------------------ */
