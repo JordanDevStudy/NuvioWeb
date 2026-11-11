@@ -10,9 +10,9 @@ arquivos originais, então a atualização diária a partir do oficial não dá 
   monta o site final (`app.html` + o encaixe `index.html`).
 - `index.html` — roda o app numa tela virtual de no mínimo 1920x960 e ajusta a
   escala para caber em qualquer janela.
-- `browser.js` — espaço = play/pause no player; esconde o cursor no player depois de 3 s.
+- `browser.js` — botão direito ou clique segurado num card = "segurar OK" (menu de opções); espaço = play/pause no player; esconde o cursor no player depois de 3 s.
 - `../web.properties` — configuração pública dos servidores do Nuvio.
 - `../.github/workflows/pages.yml` — puxa o oficial, compila e publica no GitHub Pages
   (a cada push, todo dia de madrugada, ou manual em Actions > Run workflow).
 
-Atalhos: clique/rodinha do mouse, setas + Enter, Esc ou Backspace = voltar, F11 = tela cheia.
+Atalhos: clique/rodinha do mouse, botão direito = opções do card, setas + Enter, Esc ou Backspace = voltar, F11 = tela cheia.

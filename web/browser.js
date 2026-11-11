@@ -66,4 +66,90 @@
   ["mousemove", "mousedown", "wheel"].forEach(function (t) {
     document.addEventListener(t, wake, { capture: true, passive: true });
   });
+
+  // Botão direito (ou clique segurado) num card = "segurar OK" do controle:
+  // abre o menu de opções/detalhes avançados do item.
+  var HOLD_MS = 800;
+  function synthEnter(type, target) {
+    var e = new KeyboardEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      key: "Enter",
+      code: "Enter"
+    });
+    try {
+      Object.defineProperty(e, "keyCode", {
+        get: function () {
+          return 13;
+        }
+      });
+      Object.defineProperty(e, "which", {
+        get: function () {
+          return 13;
+        }
+      });
+    } catch (err) {}
+    var dest = target && document.contains(target) ? target : document.activeElement;
+    if (!dest || !document.contains(dest)) dest = document.body;
+    dest.dispatchEvent(e);
+  }
+  function holdCard(card) {
+    if (!card || !document.contains(card)) return;
+    synthEnter("keydown", card);
+    setTimeout(function () {
+      synthEnter("keyup", card);
+    }, HOLD_MS);
+  }
+  function cardFrom(target) {
+    return target && target.closest ? target.closest(".focusable") : null;
+  }
+  document.addEventListener(
+    "contextmenu",
+    function (e) {
+      var card = cardFrom(e.target);
+      if (!card || isEditable(e.target) || inPlayer()) return;
+      e.preventDefault();
+      holdCard(card);
+    },
+    true
+  );
+
+  var pressTimer = null,
+    pressFired = false;
+  document.addEventListener(
+    "mousedown",
+    function (e) {
+      pressFired = false;
+      clearTimeout(pressTimer);
+      if (e.button !== 0 || inPlayer()) return;
+      var card = cardFrom(e.target);
+      if (!card || isEditable(e.target)) return;
+      pressTimer = setTimeout(function () {
+        pressFired = true;
+        holdCard(card);
+      }, 600);
+    },
+    true
+  );
+  ["mouseup", "mouseleave", "dragstart"].forEach(function (t) {
+    document.addEventListener(
+      t,
+      function () {
+        clearTimeout(pressTimer);
+      },
+      true
+    );
+  });
+  // Depois de um clique segurado, ignora o "clique" que vem ao soltar o botão.
+  document.addEventListener(
+    "click",
+    function (e) {
+      if (!pressFired) return;
+      pressFired = false;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+    },
+    true
+  );
 })();
