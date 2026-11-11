@@ -265,7 +265,7 @@ body {
 /* Os outros cards da fileira ficam mais quietos para o foco aparecer. */
 .home-track:has(.focused) > .home-content-card:not(.focused) .home-continue-media,
 .home-track:has(.focused) > .home-content-card:not(.focused) .home-poster-frame {
-  filter: brightness(0.7) saturate(0.85);
+  filter: brightness(0.86) saturate(0.92);
 }
 
 /* Etiqueta ("24 minutos restantes", "Próximo episódio"): pílula de vidro. */
@@ -279,14 +279,14 @@ body {
   padding-right: 0.75em !important;
   font-weight: 600 !important;
   letter-spacing: 0.01em;
+  /* Etiquetas longas ("Estreia 23 de novembro de 2026") não cobrem o texto. */
+  max-width: 62%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Textos do card */
-.home-continue-title {
-  font-family: var(--nv-display);
-  font-weight: 700 !important;
-  letter-spacing: -0.015em;
-}
+/* Textos do card (mesma fonte do app: títulos de 2 linhas não cabem com outra) */
 .home-continue-kicker {
   color: rgb(var(--secondary-color-rgb) / 0.9) !important;
   font-weight: 700 !important;
