@@ -6,7 +6,7 @@
 //
 //   node web/patch.mjs prebuild   -> ajusta o código-fonte antes do build
 //   node web/patch.mjs postbuild  -> monta o site final em dist/
-import { readFile, writeFile, copyFile, rename } from "node:fs/promises";
+import { readFile, writeFile, copyFile, rename, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -104,6 +104,15 @@ async function postbuild() {
   await copyFile(path.join(root, "web", "theme.css"), path.join(dist, "web-theme.css"));
   const wrapper = await readFile(path.join(root, "web", "index.html"), "utf8");
   await writeFile(path.join(dist, "index.html"), wrapper.split("__NV_VERSION__").join(version));
+  await copyFile(
+    path.join(root, "web", "manifest.webmanifest"),
+    path.join(dist, "manifest.webmanifest")
+  );
+  await copyFile(path.join(root, "web", "sw.js"), path.join(dist, "sw.js"));
+  await mkdir(path.join(dist, "icons"), { recursive: true });
+  for (const icon of ["icon-192.png", "icon-512.png", "maskable-192.png", "maskable-512.png"]) {
+    await copyFile(path.join(root, "web", "icons", icon), path.join(dist, "icons", icon));
+  }
   await writeFile(path.join(dist, ".nojekyll"), "");
   console.log("Nuvio Web: postbuild ok");
 }

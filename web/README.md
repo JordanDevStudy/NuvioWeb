@@ -17,6 +17,9 @@ arquivos originais, então a atualização diária a partir do oficial não dá 
   cores da marca Nuvio (azul-marinho + gradiente ciano → violeta); nos outros temas de
   Aparência segue a cor escolhida. Inclui a luz ambiente (a arte em destaque desfocada
   atrás da interface), vidro fosco no menu/diálogos e o anel em gradiente no card em foco.
+- `manifest.webmanifest`, `sw.js`, `icons/` — permitem instalar o Nuvio como app
+  (Chrome/Edge: ícone de instalar na barra de endereço). O service worker não guarda
+  cache, então nunca abre versão velha.
 - `../web.properties` — configuração pública dos servidores do Nuvio.
 - `../.github/workflows/pages.yml` — puxa o oficial, compila e publica no GitHub Pages
   (a cada push, todo dia de madrugada, ou manual em Actions > Run workflow).
@@ -27,4 +30,5 @@ arquivos originais, então a atualização diária a partir do oficial não dá 
 |---|---|---|
 | Em todo lugar | clique = abrir · rodinha = descer/subir · Shift + rodinha (ou touchpad para o lado) = passar cards | setas + Enter · Esc ou Backspace = voltar |
 | Cards | botão direito ou clique segurado = menu de opções (como segurar OK) | segurar Enter |
-| Player | mexer = mostra controles · clique = pausa · duplo clique = tela cheia · rodinha = volume · clique na barra = pular | Espaço/K = pausa · F = tela cheia · M = mudo · ← → = voltar/avançar |
+| Player | mexer = mostra controles · clique = pausa · duplo clique = tela cheia · rodinha = volume · clique na barra = pular | Espaço/K = pausa · F = tela cheia · P = janela flutuante · M = mudo · ← → = voltar/avançar |
+| Geral | | / = buscar · ? = lista de atalhos |

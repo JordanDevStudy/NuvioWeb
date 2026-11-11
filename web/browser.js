@@ -324,7 +324,8 @@
     function (e) {
       if (!inPlayer() || isEditable(e.target)) return;
       var k = String(e.key || "").toLowerCase();
-      if (e.code === "Space" || k === " " || k === "k" || k === "f" || k === "m") stop(e);
+      if (e.code === "Space" || k === " " || k === "k" || k === "f" || k === "m" || k === "p")
+        stop(e);
     },
     true
   );
@@ -422,4 +423,109 @@
   }
 
   setInterval(updateAmbient, 700);
+
+  /* ---------------------------------------------------------------- *
+   * Picture-in-Picture (P), título da aba e atalhos globais (/ e ?).   *
+   * ---------------------------------------------------------------- */
+  function togglePiP() {
+    var v = video();
+    if (!v || !document.pictureInPictureEnabled) return;
+    try {
+      if (document.pictureInPictureElement) {
+        document.exitPictureInPicture();
+      } else {
+        v.requestPictureInPicture();
+      }
+    } catch (err) {}
+  }
+
+  // Título da aba: "▶ Nome do título · Nuvio" enquanto toca.
+  var baseTitle = "Nuvio";
+  function playerTitleText() {
+    var el = document.querySelector("#playerUiRoot .player-title");
+    return el
+      ? String(el.textContent || "")
+          .replace(/\s+/g, " ")
+          .trim()
+      : "";
+  }
+  function updateTitle() {
+    var title = baseTitle;
+    if (inPlayer()) {
+      var name = playerTitleText();
+      var v = video();
+      if (name) title = (v && !v.paused ? "▶ " : "❚❚ ") + name + " · Nuvio";
+    }
+    if (document.title !== title) document.title = title;
+  }
+  setInterval(updateTitle, 1000);
+
+  // Janela de atalhos (?)
+  var helpEl = null;
+  var HELP_ROWS = [
+    ["Clique", "Abrir"],
+    ["Botão direito", "Opções do card (como segurar OK)"],
+    ["Rodinha / Shift + rodinha", "Descer e subir / passar cards para o lado"],
+    ["Setas + Enter", "Navegar como no controle"],
+    ["Esc ou Backspace", "Voltar"],
+    ["/", "Buscar"],
+    ["Espaço ou K", "Pausar no player"],
+    ["← →", "Voltar e avançar no player"],
+    ["F ou duplo clique", "Tela cheia"],
+    ["P", "Janela flutuante (Picture-in-Picture)"],
+    ["M / rodinha no player", "Mudo / volume"],
+    ["?", "Mostrar ou esconder esta lista"]
+  ];
+  function toggleHelp(force) {
+    var show = typeof force === "boolean" ? force : !(helpEl && helpEl.classList.contains("show"));
+    if (!helpEl) {
+      helpEl = document.createElement("div");
+      helpEl.id = "nvHelp";
+      helpEl.setAttribute("role", "dialog");
+      helpEl.setAttribute("aria-label", "Atalhos");
+      var html = '<div class="nv-help-panel"><h2>Atalhos</h2><dl>';
+      HELP_ROWS.forEach(function (r) {
+        html += "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>";
+      });
+      html += "</dl><p>Aperte ? ou Esc para fechar</p></div>";
+      helpEl.innerHTML = html;
+      helpEl.addEventListener("click", function (e) {
+        if (e.target === helpEl) toggleHelp(false);
+      });
+      document.body.appendChild(helpEl);
+    }
+    helpEl.classList.toggle("show", show);
+  }
+
+  document.addEventListener(
+    "keydown",
+    function (e) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      var helpOpen = helpEl && helpEl.classList.contains("show");
+      if (helpOpen && (e.key === "Escape" || e.key === "Backspace" || e.key === "?")) {
+        stop(e);
+        toggleHelp(false);
+        return;
+      }
+      if (isEditable(e.target)) return;
+      if (e.key === "?") {
+        stop(e);
+        toggleHelp();
+        return;
+      }
+      if (e.key === "/" && !inPlayer() && !hasOpenDialog()) {
+        var search = document.querySelector('[data-action="gotoSearch"]');
+        if (search) {
+          stop(e);
+          search.click();
+        }
+        return;
+      }
+      if (inPlayer() && String(e.key).toLowerCase() === "p") {
+        stop(e);
+        togglePiP();
+      }
+    },
+    true
+  );
 })();

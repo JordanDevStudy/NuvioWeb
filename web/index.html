@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nuvio</title>
-    <link rel="icon" type="image/png" href="assets/brand/app_logo_mark.png" />
+    <link rel="icon" type="image/png" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#0b0d18" />
     <style>
       html,
       body {
@@ -87,6 +90,11 @@
 
         var query = "nvv=__NV_VERSION__" + (location.search ? "&" + location.search.slice(1) : "");
         frame.src = "app.html?" + query + location.hash;
+
+        // Permite instalar como app (Chrome/Edge: ícone de instalar na barra de endereço).
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.register("sw.js").catch(function () {});
+        }
       })();
     </script>
   </body>

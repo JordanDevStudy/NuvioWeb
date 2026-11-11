@@ -163,19 +163,11 @@ body {
     height 180ms ease-out;
 }
 
-.home-screen-shell .home-poster-card.focused .home-poster-frame,
-.home-screen-shell.home-layout-modern .home-poster-card.focused .home-poster-frame {
+.home-screen-shell.home-layout-modern .home-poster-card.focused .home-poster-frame,
+.home-screen-shell.home-layout-classic .home-poster-card.focused .home-poster-frame,
+.home-screen-shell.home-layout-grid .home-poster-card.focused .home-poster-frame {
   border-color: transparent !important;
   box-shadow:
-    0 0 0 2px var(--bg-color),
-    0 0 0 4px rgb(var(--secondary-color-rgb) / 0.95),
-    0 18px 50px -14px var(--nv-glow),
-    0 10px 30px -10px rgba(0, 0, 0, 0.8) !important;
-}
-
-.home-screen-shell .home-poster-card.focused .home-poster-frame {
-  box-shadow:
-    0 0 0 2px var(--bg-color),
     0 18px 50px -12px var(--nv-glow),
     0 10px 30px -10px rgba(0, 0, 0, 0.8) !important;
 }
@@ -454,6 +446,59 @@ html[data-nuvio-theme="WHITE"]
   .player-control-btn.is-primary
   .player-control-icon:not(.player-control-icon-mask) {
   filter: brightness(0) invert(1);
+}
+
+/* ------------------------------------------------------------------ */
+/* Janela de atalhos (?)                                               */
+/* ------------------------------------------------------------------ */
+#nvHelp {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483001;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 6, 12, 0.55);
+}
+#nvHelp.show {
+  display: flex;
+}
+#nvHelp .nv-help-panel {
+  min-width: 34vw;
+  padding: 2.2vw 2.6vw;
+  border-radius: 24px;
+  background: var(--nv-glass-strong);
+  -webkit-backdrop-filter: blur(30px) saturate(1.4);
+  backdrop-filter: blur(30px) saturate(1.4);
+  border: 1px solid var(--nv-line);
+  box-shadow: 0 40px 120px -30px rgba(0, 0, 0, 0.85);
+  color: var(--text-color);
+  font-family: var(--app-font-family);
+}
+#nvHelp h2 {
+  margin: 0 0 1.2vw;
+  font: 800 2vw/1 var(--nv-display);
+  letter-spacing: -0.02em;
+}
+#nvHelp dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.7vw 2vw;
+  margin: 0;
+  font-size: 1.05vw;
+}
+#nvHelp dt {
+  font-weight: 700;
+  color: var(--text-color);
+}
+#nvHelp dd {
+  margin: 0;
+  color: var(--text-secondary);
+}
+#nvHelp p {
+  margin: 1.4vw 0 0;
+  font-size: 0.85vw;
+  color: var(--text-tertiary);
 }
 
 /* ------------------------------------------------------------------ */
