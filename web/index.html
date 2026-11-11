@@ -85,7 +85,8 @@
         });
         setInterval(syncTitle, 2000);
 
-        frame.src = "app.html" + location.search + location.hash;
+        var query = "nvv=__NV_VERSION__" + (location.search ? "&" + location.search.slice(1) : "");
+        frame.src = "app.html?" + query + location.hash;
       })();
     </script>
   </body>

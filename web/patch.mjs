@@ -88,18 +88,22 @@ async function prebuild() {
 }
 
 async function postbuild() {
+  // Versão de cada publicação: obriga o navegador a baixar os arquivos novos
+  // (o GitHub Pages guarda cache por ~10 min e a moldura interna nem sempre recarrega).
+  const version = String(process.env.GITHUB_SHA || Date.now().toString(36)).slice(0, 10);
   // O app vira app.html; o index.html passa a ser o "encaixe" que ajusta a escala.
   await rename(path.join(dist, "index.html"), path.join(dist, "app.html"));
   let app = await readFile(path.join(dist, "app.html"), "utf8");
   app = app.replace("<title>Nuvio TV</title>", "<title>Nuvio</title>");
   app = app.replace(
     "</head>",
-    '    <link rel="stylesheet" href="web-theme.css" />\n    <script src="web-browser.js"></script>\n  </head>'
+    `    <link rel="stylesheet" href="web-theme.css?v=${version}" />\n    <script src="web-browser.js?v=${version}"></script>\n  </head>`
   );
   await writeFile(path.join(dist, "app.html"), app);
   await copyFile(path.join(root, "web", "browser.js"), path.join(dist, "web-browser.js"));
   await copyFile(path.join(root, "web", "theme.css"), path.join(dist, "web-theme.css"));
-  await copyFile(path.join(root, "web", "index.html"), path.join(dist, "index.html"));
+  const wrapper = await readFile(path.join(root, "web", "index.html"), "utf8");
+  await writeFile(path.join(dist, "index.html"), wrapper.split("__NV_VERSION__").join(version));
   await writeFile(path.join(dist, ".nojekyll"), "");
   console.log("Nuvio Web: postbuild ok");
 }
