@@ -35,6 +35,55 @@ async function prebuild() {
   await replaceInFile("js/ui/navigation/focusEngine.js", [
     ["Platform.isWebOS()", "(Platform.isWebOS() || Platform.isBrowser())"]
   ]);
+
+  // Player com mouse, como num site de vídeo:
+  // - mexer o mouse mostra os controles (e reinicia o tempo para escondê-los);
+  // - clicar no vídeo pausa/despausa (antes só mostrava os controles).
+  await replaceInFile("js/ui/screens/player/playerScreenMethods-69-sync-pointer-focus.js", [
+    [
+      `        this.isPostPlayVisible() ||
+        this.controlsVisible
+      ) {
+        return false;
+      }
+      const video = this.container?.querySelector?.("#videoPlayer");
+      if (!video || (target !== video && target?.closest?.("#videoPlayer") !== video)) {
+        return false;
+      }
+      this.setControlsVisible(true, { focus: true });
+      return true;
+    },`,
+      `        this.isPostPlayVisible()
+      ) {
+        return false;
+      }
+      const video = this.container?.querySelector?.("#videoPlayer");
+      if (!video || (target !== video && target?.closest?.("#videoPlayer") !== video)) {
+        return false;
+      }
+      this.togglePause({ focusControls: false });
+      this.renderControlButtons();
+      this.setControlsVisible(true, { focus: false });
+      this.resetControlsAutoHide();
+      return true;
+    },
+    onPointerMove() {
+      if (
+        this.isExternalFrameMode() ||
+        this.isDialogOpen() ||
+        this.isStartupErrorVisible() ||
+        this.isPostPlayVisible()
+      ) {
+        return;
+      }
+      if (this.controlsVisible) {
+        this.resetControlsAutoHide();
+        return;
+      }
+      this.setControlsVisible(true, { focus: false });
+    },`
+    ]
+  ]);
   console.log("Nuvio Web: prebuild ok");
 }
 

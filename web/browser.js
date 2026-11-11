@@ -1,9 +1,23 @@
 /*
  * Nuvio Web — ajustes para usar no navegador do PC com mouse e teclado.
  * Carregado pelo app.html (injetado no build por web/patch.mjs).
+ *
+ * O Nuvio foi feito para controle remoto de TV. Aqui o mouse e o teclado do
+ * PC são "traduzidos" para as teclas do controle quando faz sentido, sem
+ * mudar a aparência do app.
  */
 (function () {
   "use strict";
+
+  var KEY = { ENTER: 13, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, PLAY_PAUSE: 10252 };
+  var KEY_NAMES = {
+    13: "Enter",
+    37: "ArrowLeft",
+    38: "ArrowUp",
+    39: "ArrowRight",
+    40: "ArrowDown",
+    10252: "MediaPlayPause"
+  };
 
   function isEditable(target) {
     if (!target) return false;
@@ -16,45 +30,68 @@
     return Boolean(document.getElementById("playerUiRoot"));
   }
 
-  // Espaço = play/pause no player (vira a tecla Play/Pause do controle da TV).
-  function synthKey(type, original) {
-    var e = new KeyboardEvent(type, { bubbles: true, cancelable: true, key: "MediaPlayPause" });
+  function hasOpenDialog() {
+    return Boolean(document.body && document.body.classList.contains("nuvio-modal-open"));
+  }
+
+  // Dispara uma tecla do controle como se tivesse sido apertada.
+  function synthKey(type, keyCode, target) {
+    var e = new KeyboardEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      key: KEY_NAMES[keyCode] || "",
+      code: KEY_NAMES[keyCode] || ""
+    });
     try {
       Object.defineProperty(e, "keyCode", {
         get: function () {
-          return 10252;
+          return keyCode;
         }
       });
       Object.defineProperty(e, "which", {
         get: function () {
-          return 10252;
+          return keyCode;
         }
       });
     } catch (err) {}
-    (original.target || document.body).dispatchEvent(e);
+    var dest = target && document.contains(target) ? target : document.activeElement;
+    if (!dest || !document.contains(dest)) dest = document.body;
+    dest.dispatchEvent(e);
   }
-  ["keydown", "keyup"].forEach(function (type) {
-    document.addEventListener(
-      type,
-      function (e) {
-        if (e.code !== "Space" && e.key !== " ") return;
-        if (isEditable(e.target) || !inPlayer()) return;
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        if (type === "keydown" && e.repeat) return;
-        synthKey(type, e);
-      },
-      true
-    );
-  });
 
-  // Esconde o cursor do mouse no player depois de 3 s parado.
+  function pressKey(keyCode, target) {
+    synthKey("keydown", keyCode, target);
+    synthKey("keyup", keyCode, target);
+  }
+
+  function stop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Estilo: cursor de "mãozinha" em tudo que é clicável e cursor que  *
+   * some no player depois de 3 s parado.                              *
+   * ---------------------------------------------------------------- */
   var style = document.createElement("style");
   style.textContent =
     "html.nv-cursor-idle, html.nv-cursor-idle * { cursor: none !important; }" +
-    ".focusable { cursor: pointer; }";
+    ".focusable, [data-action], .player-progress-shell { cursor: pointer; }" +
+    // A barra de tempo do player herdava "pointer-events: none" do overlay (na TV
+    // não se clica nela); os botões já tinham exceção, a barra não.
+    "#playerUiRoot.controls-visible .player-progress-shell { pointer-events: auto; }" +
+    "#nvVolumeToast { position: fixed; top: 5%; left: 50%; transform: translateX(-50%);" +
+    " z-index: 2147483000; padding: 0.6vw 1.2vw; border-radius: 999px;" +
+    " background: rgba(0,0,0,0.72); color: #fff; font: 600 1.05vw/1.2 Inter, system-ui, sans-serif;" +
+    " opacity: 0; transition: opacity .2s; pointer-events: none; }" +
+    // Área de clique maior na barra de tempo (invisível; o visual não muda).
+    "#playerUiRoot.controls-visible .player-progress-shell { position: relative; }" +
+    "#playerUiRoot.controls-visible .player-progress-shell::after { content: '';" +
+    " position: absolute; left: 0; right: 0; top: -14px; bottom: -14px; }" +
+    "#nvVolumeToast.show { opacity: 1; }";
   (document.head || document.documentElement).appendChild(style);
+
   var idleTimer = null;
   function wake() {
     document.documentElement.classList.remove("nv-cursor-idle");
@@ -67,37 +104,89 @@
     document.addEventListener(t, wake, { capture: true, passive: true });
   });
 
-  // Botão direito (ou clique segurado) num card = "segurar OK" do controle:
-  // abre o menu de opções/detalhes avançados do item.
-  var HOLD_MS = 800;
-  function synthEnter(type, target) {
-    var e = new KeyboardEvent(type, {
-      bubbles: true,
-      cancelable: true,
-      key: "Enter",
-      code: "Enter"
-    });
-    try {
-      Object.defineProperty(e, "keyCode", {
-        get: function () {
-          return 13;
-        }
-      });
-      Object.defineProperty(e, "which", {
-        get: function () {
-          return 13;
-        }
-      });
-    } catch (err) {}
-    var dest = target && document.contains(target) ? target : document.activeElement;
-    if (!dest || !document.contains(dest)) dest = document.body;
-    dest.dispatchEvent(e);
+  /* ---------------------------------------------------------------- *
+   * Menu lateral: na TV ele abre quando o foco vai para ele e fecha    *
+   * quando o foco volta para o conteúdo (seta →). Com mouse, ele abria *
+   * ao passar por cima e ficava aberto, escurecendo tudo. Agora fecha  *
+   * sozinho quando o mouse sai dele.                                   *
+   * ---------------------------------------------------------------- */
+  var SIDEBAR_SELECTOR =
+    ".home-sidebar, .root-sidebar-legacy, .modern-sidebar-shell, .modern-sidebar-panel";
+
+  function expandedSidebar() {
+    return document.querySelector(
+      ".has-expanded-sidebar, .root-sidebar-legacy.expanded, .modern-sidebar-shell.expanded, .home-sidebar.expanded"
+    );
   }
+
+  var collapseTimer = null;
+  document.addEventListener(
+    "mousemove",
+    function (e) {
+      if (inPlayer() || hasOpenDialog()) return;
+      var target = e.target;
+      var overSidebar = target && target.closest && target.closest(SIDEBAR_SELECTOR);
+      if (overSidebar) {
+        clearTimeout(collapseTimer);
+        collapseTimer = null;
+        return;
+      }
+      if (collapseTimer || !expandedSidebar()) return;
+      // Pequena tolerância para quem passa o mouse rápido pela borda.
+      collapseTimer = setTimeout(function () {
+        collapseTimer = null;
+        if (!expandedSidebar()) return;
+        pressKey(KEY.RIGHT);
+      }, 180);
+    },
+    { capture: true, passive: true }
+  );
+
+  /* ---------------------------------------------------------------- *
+   * Rolagem lateral: Shift + rodinha ou touchpad para o lado viram as   *
+   * setas ← → (passa os cards da fileira).                            *
+   * ---------------------------------------------------------------- */
+  var hAccum = 0;
+  var hLast = 0;
+  document.addEventListener(
+    "wheel",
+    function (e) {
+      if (inPlayer() || hasOpenDialog() || e.ctrlKey) return;
+      var dx = e.deltaX;
+      if (e.shiftKey && Math.abs(e.deltaY) > Math.abs(dx)) dx = e.deltaY;
+      if (Math.abs(dx) <= Math.abs(e.shiftKey ? 0 : e.deltaY)) return;
+      // Só onde existe uma fileira horizontal embaixo do mouse.
+      var row =
+        e.target &&
+        e.target.closest &&
+        e.target.closest(
+          ".home-row, .home-track, [class*='-track'], [class*='-row'], [class*='rail']"
+        );
+      if (!row) return;
+      stop(e);
+      var now = Date.now();
+      if (now - hLast > 400) hAccum = 0;
+      hLast = now;
+      hAccum += dx;
+      var STEP = 90;
+      while (Math.abs(hAccum) >= STEP) {
+        pressKey(hAccum > 0 ? KEY.RIGHT : KEY.LEFT);
+        hAccum -= hAccum > 0 ? STEP : -STEP;
+      }
+    },
+    { capture: true, passive: false }
+  );
+
+  /* ---------------------------------------------------------------- *
+   * Botão direito (ou clique segurado) num card = "segurar OK" do      *
+   * controle: abre o menu de opções do item.                           *
+   * ---------------------------------------------------------------- */
+  var HOLD_MS = 800;
   function holdCard(card) {
     if (!card || !document.contains(card)) return;
-    synthEnter("keydown", card);
+    synthKey("keydown", KEY.ENTER, card);
     setTimeout(function () {
-      synthEnter("keyup", card);
+      synthKey("keyup", KEY.ENTER, card);
     }, HOLD_MS);
   }
   function cardFrom(target) {
@@ -106,16 +195,20 @@
   document.addEventListener(
     "contextmenu",
     function (e) {
+      if (inPlayer()) {
+        e.preventDefault();
+        return;
+      }
       var card = cardFrom(e.target);
-      if (!card || isEditable(e.target) || inPlayer()) return;
+      if (!card || isEditable(e.target)) return;
       e.preventDefault();
       holdCard(card);
     },
     true
   );
 
-  var pressTimer = null,
-    pressFired = false;
+  var pressTimer = null;
+  var pressFired = false;
   document.addEventListener(
     "mousedown",
     function (e) {
@@ -146,10 +239,124 @@
     function (e) {
       if (!pressFired) return;
       pressFired = false;
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
+      stop(e);
     },
     true
+  );
+
+  /* ---------------------------------------------------------------- *
+   * Player                                                            *
+   *   Espaço / K  = play/pause        F / duplo clique = tela cheia    *
+   *   M           = mudo              rodinha = volume                 *
+   * ---------------------------------------------------------------- */
+  function topDocument() {
+    try {
+      return window.top.document;
+    } catch (err) {
+      return document;
+    }
+  }
+
+  function toggleFullscreen() {
+    var doc = topDocument();
+    try {
+      if (doc.fullscreenElement) {
+        doc.exitFullscreen();
+      } else {
+        doc.documentElement.requestFullscreen();
+      }
+    } catch (err) {}
+  }
+
+  function video() {
+    return document.querySelector("#videoPlayer") || document.querySelector("video");
+  }
+
+  var toastTimer = null;
+  function showVolume(v) {
+    var el = document.getElementById("nvVolumeToast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "nvVolumeToast";
+      document.body.appendChild(el);
+    }
+    el.textContent =
+      v.muted || v.volume === 0 ? "Sem som" : "Volume " + Math.round(v.volume * 100) + "%";
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      el.classList.remove("show");
+    }, 900);
+  }
+
+  function changeVolume(delta) {
+    var v = video();
+    if (!v) return;
+    v.muted = false;
+    v.volume = Math.max(0, Math.min(1, Math.round((v.volume + delta) * 100) / 100));
+    showVolume(v);
+  }
+
+  document.addEventListener(
+    "keydown",
+    function (e) {
+      if (!inPlayer() || isEditable(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
+      var k = String(e.key || "").toLowerCase();
+      if (e.code === "Space" || k === " " || k === "k") {
+        stop(e);
+        if (!e.repeat) pressKey(KEY.PLAY_PAUSE, e.target);
+      } else if (k === "f") {
+        stop(e);
+        toggleFullscreen();
+      } else if (k === "m") {
+        stop(e);
+        var v = video();
+        if (v) {
+          v.muted = !v.muted;
+          showVolume(v);
+        }
+      }
+    },
+    true
+  );
+  document.addEventListener(
+    "keyup",
+    function (e) {
+      if (!inPlayer() || isEditable(e.target)) return;
+      var k = String(e.key || "").toLowerCase();
+      if (e.code === "Space" || k === " " || k === "k" || k === "f" || k === "m") stop(e);
+    },
+    true
+  );
+
+  document.addEventListener(
+    "dblclick",
+    function (e) {
+      if (!inPlayer()) return;
+      var t = e.target;
+      if (t && t.closest && t.closest(".focusable, button, [data-action], .player-progress-shell"))
+        return;
+      stop(e);
+      toggleFullscreen();
+    },
+    true
+  );
+
+  document.addEventListener(
+    "wheel",
+    function (e) {
+      if (!inPlayer() || hasOpenDialog() || e.ctrlKey) return;
+      var t = e.target;
+      // Deixa rolar normalmente listas dentro do player (episódios, fontes, legendas).
+      if (
+        t &&
+        t.closest &&
+        t.closest("[class*='panel'], [class*='dialog'], [class*='list'], [class*='menu']")
+      )
+        return;
+      stop(e);
+      changeVolume(e.deltaY < 0 ? 0.05 : -0.05);
+    },
+    { capture: true, passive: false }
   );
 })();

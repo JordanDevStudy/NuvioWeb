@@ -6,13 +6,21 @@ Fork do Nuvio oficial (NuvioMedia/NuvioTVSmart), feito para TV, adaptado para o
 navegador do PC. Tudo que é específico do site fica nesta pasta, sem editar os
 arquivos originais, então a atualização diária a partir do oficial não dá conflito.
 
-- `patch.mjs` — liga o suporte a mouse no navegador (antes só existia no webOS) e
-  monta o site final (`app.html` + o encaixe `index.html`).
+- `patch.mjs` — ajusta o código oficial na hora do build: liga o mouse no navegador
+  (antes só existia no webOS) e, no player, faz o mouse mostrar os controles e o clique
+  no vídeo pausar/despausar. Também monta o site final (`app.html` + o encaixe `index.html`).
 - `index.html` — roda o app numa tela virtual de no mínimo 1920x960 e ajusta a
   escala para caber em qualquer janela.
-- `browser.js` — botão direito ou clique segurado num card = "segurar OK" (menu de opções); espaço = play/pause no player; esconde o cursor no player depois de 3 s.
+- `browser.js` — traduz mouse/teclado do PC para o controle da TV (veja os atalhos abaixo),
+  fecha o menu lateral quando o mouse sai dele e deixa a barra de tempo clicável.
 - `../web.properties` — configuração pública dos servidores do Nuvio.
 - `../.github/workflows/pages.yml` — puxa o oficial, compila e publica no GitHub Pages
   (a cada push, todo dia de madrugada, ou manual em Actions > Run workflow).
 
-Atalhos: clique/rodinha do mouse, botão direito = opções do card, setas + Enter, Esc ou Backspace = voltar, F11 = tela cheia.
+## Atalhos
+
+| Onde | Mouse | Teclado |
+|---|---|---|
+| Em todo lugar | clique = abrir · rodinha = descer/subir · Shift + rodinha (ou touchpad para o lado) = passar cards | setas + Enter · Esc ou Backspace = voltar |
+| Cards | botão direito ou clique segurado = menu de opções (como segurar OK) | segurar Enter |
+| Player | mexer = mostra controles · clique = pausa · duplo clique = tela cheia · rodinha = volume · clique na barra = pular | Espaço/K = pausa · F = tela cheia · M = mudo · ← → = voltar/avançar |
