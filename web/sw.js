@@ -1,10 +1,14 @@
 /*
  * Nuvio Web — service worker mínimo.
- * Existe só para o Chrome/Edge oferecerem "Instalar app". Não guarda nada em
- * cache: tudo continua vindo da internet, então nunca abre uma versão velha.
+ * - Permite ao Chrome/Edge oferecer "Instalar app".
+ * - A página principal (index.html) sempre vem direto da internet, sem cache:
+ *   o GitHub Pages guarda cache por até 10 min, e sem isso uma atualização
+ *   demorava a aparecer. O resto continua com o comportamento normal.
  */
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
-self.addEventListener("fetch", () => {
-  // Sem respondWith: o navegador busca normalmente.
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.mode !== "navigate" || request.method !== "GET") return;
+  event.respondWith(fetch(request, { cache: "no-store" }).catch(() => fetch(request)));
 });
