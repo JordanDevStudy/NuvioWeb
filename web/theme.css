@@ -449,6 +449,30 @@ html[data-nuvio-theme="WHITE"]
 }
 
 /* ------------------------------------------------------------------ */
+/* Hover do mouse: só visual (o foco/rolagem só mudam com clique,     */
+/* rodinha ou teclado).                                                */
+/* ------------------------------------------------------------------ */
+.home-content-card:not(.focused):hover {
+  transform: translateY(-3px) !important;
+  transition: transform 200ms var(--nv-ease) !important;
+}
+.home-track:has(.focused) > .home-content-card:not(.focused):hover .home-continue-media,
+.home-track:has(.focused) > .home-content-card:not(.focused):hover .home-poster-frame,
+.home-content-card:not(.focused):hover .home-continue-media,
+.home-content-card:not(.focused):hover .home-poster-frame {
+  filter: brightness(1.08) saturate(1.05) !important;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.55),
+    0 16px 34px -16px rgba(0, 0, 0, 0.9) !important;
+}
+.home-nav-item:not(.focused):hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+.focusable:not(.focused):not(.home-content-card):hover {
+  filter: brightness(1.15);
+}
+
+/* ------------------------------------------------------------------ */
 /* Janela de atalhos (?)                                               */
 /* ------------------------------------------------------------------ */
 #nvHelp {

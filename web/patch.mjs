@@ -33,7 +33,23 @@ async function prebuild() {
   // O suporte a mouse (hover, clique) existe no Nuvio, mas só liga no webOS
   // (Magic Remote da LG). Liga também no navegador.
   await replaceInFile("js/ui/navigation/focusEngine.js", [
-    ["Platform.isWebOS()", "(Platform.isWebOS() || Platform.isBrowser())"]
+    ["Platform.isWebOS()", "(Platform.isWebOS() || Platform.isBrowser())"],
+    // No navegador, passar o mouse NÃO move o foco (na TV, apontar = focar).
+    // Senão a página rola e o destaque do topo troca só de mover o mouse.
+    // Exceções: player (destacar botões) e menus/diálogos abertos.
+    [
+      `    this.focusPointerTarget(target, event);
+  },
+
+  handlePointerClick(event) {`,
+      `    if (Platform.isBrowser() && !hasActiveModal() && !document.getElementById("playerUiRoot")) {
+      return;
+    }
+    this.focusPointerTarget(target, event);
+  },
+
+  handlePointerClick(event) {`
+    ]
   ]);
 
   // Player com mouse, como num site de vídeo:

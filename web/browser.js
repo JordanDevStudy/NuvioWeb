@@ -528,4 +528,21 @@
     },
     true
   );
+
+  /* ---------------------------------------------------------------- *
+   * Hover não move o foco. As telas inicial, Descobrir e "Ver tudo"    *
+   * têm seus próprios "mouseover/mouseenter" que focam o card (e rolam *
+   * a página). Bloqueia esses eventos antes de chegarem nelas, menos   *
+   * no player e em menus abertos. O destaque visual vem do CSS :hover. *
+   * ---------------------------------------------------------------- */
+  ["mouseover", "mouseenter", "pointerover", "pointerenter"].forEach(function (type) {
+    window.addEventListener(
+      type,
+      function (e) {
+        if (inPlayer() || hasOpenDialog()) return;
+        e.stopPropagation();
+      },
+      true
+    );
+  });
 })();
