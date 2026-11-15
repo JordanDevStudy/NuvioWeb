@@ -28,7 +28,7 @@ arquivos originais, então a atualização diária a partir do oficial não dá 
 
 | Onde | Mouse | Teclado |
 |---|---|---|
-| Em todo lugar | clique = abrir · rodinha = descer/subir · Shift + rodinha (ou touchpad para o lado) = passar cards | setas + Enter · Esc ou Backspace = voltar |
+| Em todo lugar | clique = abrir · rodinha = descer/subir · Shift + rodinha, touchpad para o lado, arrastar a fileira ou setas ‹ › nas pontas = passar cards | setas + Enter · Esc ou Backspace = voltar |
 | Cards | botão direito ou clique segurado = menu de opções (como segurar OK) | segurar Enter |
 | Player | mexer = mostra controles · clique = pausa · duplo clique = tela cheia · rodinha = volume · clique na barra = pular | Espaço/K = pausa · F = tela cheia · P = janela flutuante · M = mudo · ← → = voltar/avançar |
 | Geral | | / = buscar · ? = lista de atalhos |

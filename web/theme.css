@@ -483,6 +483,62 @@ html.nv-dragging * {
   -webkit-user-drag: none;
 }
 
+/* Setas ‹ › nas pontas das fileiras (criadas por web/browser.js). */
+.nv-row-arrow {
+  position: fixed;
+  z-index: 900;
+  width: 4.2vw;
+  min-width: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms var(--nv-ease);
+  background: none;
+}
+.nv-row-arrow-left {
+  background: linear-gradient(90deg, rgb(var(--bg-color-rgb) / 0.92), rgb(var(--bg-color-rgb) / 0));
+}
+.nv-row-arrow-right {
+  background: linear-gradient(
+    270deg,
+    rgb(var(--bg-color-rgb) / 0.92),
+    rgb(var(--bg-color-rgb) / 0)
+  );
+}
+.nv-row-arrow.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.nv-row-arrow svg {
+  width: 2.6vw;
+  min-width: 34px;
+  height: 2.6vw;
+  min-height: 34px;
+  padding: 0.55vw;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--nv-glass-strong);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 10px 24px -10px rgba(0, 0, 0, 0.8);
+  transition:
+    transform 160ms var(--nv-ease),
+    background 160ms var(--nv-ease);
+}
+.nv-row-arrow:hover svg {
+  transform: scale(1.12);
+  background: var(--nv-grad);
+  color: var(--nv-on-grad);
+}
+
 /* ------------------------------------------------------------------ */
 /* Janela de atalhos (?)                                               */
 /* ------------------------------------------------------------------ */

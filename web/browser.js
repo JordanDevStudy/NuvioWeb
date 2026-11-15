@@ -652,4 +652,108 @@
     },
     true
   );
+
+  /* ---------------------------------------------------------------- *
+   * Setas ‹ › nas pontas das fileiras: aparecem com o mouse em cima e   *
+   * avançam uma "página" de cards. Um par só, posicionado sobre a      *
+   * fileira em foco do mouse (as fileiras são recriadas o tempo todo). *
+   * ---------------------------------------------------------------- */
+  var arrows = null;
+  var arrowTarget = null;
+  var arrowHideTimer = null;
+
+  function makeArrow(dir) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "nv-row-arrow nv-row-arrow-" + dir;
+    b.setAttribute("aria-label", dir === "left" ? "Anteriores" : "Próximos");
+    b.innerHTML =
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' +
+      (dir === "left" ? "M15 5l-7 7 7 7" : "M9 5l7 7-7 7") +
+      '" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    b.addEventListener("mousedown", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    b.addEventListener("click", function (e) {
+      stop(e);
+      if (!arrowTarget || !document.contains(arrowTarget)) return;
+      var step = Math.max(200, arrowTarget.clientWidth * 0.82);
+      arrowTarget.scrollBy({ left: dir === "left" ? -step : step, behavior: "smooth" });
+      setTimeout(placeArrows, 420);
+    });
+    return b;
+  }
+
+  function ensureArrows() {
+    if (arrows && document.body.contains(arrows.left)) return;
+    arrows = { left: makeArrow("left"), right: makeArrow("right") };
+    document.body.appendChild(arrows.left);
+    document.body.appendChild(arrows.right);
+  }
+
+  function hideArrows() {
+    if (!arrows) return;
+    arrows.left.classList.remove("show");
+    arrows.right.classList.remove("show");
+    arrowTarget = null;
+  }
+
+  function placeArrows() {
+    if (!arrows || !arrowTarget || !document.contains(arrowTarget)) return hideArrows();
+    var r = arrowTarget.getBoundingClientRect();
+    if (r.width < 200 || Math.min(innerHeight, r.bottom) - Math.max(0, r.top) < 60)
+      return hideArrows();
+    var max = arrowTarget.scrollWidth - arrowTarget.clientWidth;
+    var canLeft = arrowTarget.scrollLeft > 4;
+    var canRight = arrowTarget.scrollLeft < max - 4;
+    [
+      [arrows.left, canLeft, r.left],
+      [arrows.right, canRight, r.right]
+    ].forEach(function (a) {
+      var el = a[0];
+      // Só a parte visível da fileira (ela pode estar cortada na borda da tela).
+      var top = Math.max(0, r.top);
+      var bottom = Math.min(innerHeight, r.bottom);
+      el.style.top = top + "px";
+      el.style.height = Math.max(0, bottom - top) + "px";
+      if (el === arrows.left) el.style.left = Math.max(0, a[2]) + "px";
+      else el.style.left = Math.min(innerWidth, a[2]) - el.offsetWidth + "px";
+      el.classList.toggle("show", a[1]);
+    });
+  }
+
+  document.addEventListener(
+    "mousemove",
+    function (e) {
+      if (inPlayer() || hasOpenDialog() || (drag && drag.active)) return hideArrows();
+      var t = e.target;
+      if (t && t.closest && t.closest(".nv-row-arrow")) {
+        clearTimeout(arrowHideTimer);
+        return;
+      }
+      var scroller = horizontalScroller(t);
+      if (scroller) {
+        clearTimeout(arrowHideTimer);
+        ensureArrows();
+        if (scroller !== arrowTarget) {
+          arrowTarget = scroller;
+        }
+        placeArrows();
+      } else if (arrowTarget && !arrowHideTimer) {
+        arrowHideTimer = setTimeout(function () {
+          arrowHideTimer = null;
+          hideArrows();
+        }, 250);
+      }
+    },
+    { capture: true, passive: true }
+  );
+  document.addEventListener(
+    "scroll",
+    function () {
+      if (arrowTarget) placeArrows();
+    },
+    true
+  );
 })();
