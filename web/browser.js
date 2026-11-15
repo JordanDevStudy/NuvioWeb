@@ -234,7 +234,7 @@
     );
   });
   // Depois de um clique segurado, ignora o "clique" que vem ao soltar o botão.
-  document.addEventListener(
+  window.addEventListener(
     "click",
     function (e) {
       if (!pressFired) return;
@@ -545,4 +545,111 @@
       true
     );
   });
+
+  /* ---------------------------------------------------------------- *
+   * Arrastar fileiras: clicar, segurar e arrastar para o lado rola a   *
+   * fileira (com embalo ao soltar), como nos sites de streaming.       *
+   * Funciona em qualquer lista horizontal com rolagem.                 *
+   * ---------------------------------------------------------------- */
+  var DRAG_THRESHOLD = 6;
+  var drag = null;
+  var dragJustEnded = false;
+
+  function horizontalScroller(el) {
+    while (el && el !== document.body && el.nodeType === 1) {
+      if (el.scrollWidth > el.clientWidth + 2) {
+        var ox = getComputedStyle(el).overflowX;
+        if (ox === "auto" || ox === "scroll") return el;
+      }
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  document.addEventListener(
+    "mousedown",
+    function (e) {
+      if (e.button !== 0 || inPlayer() || isEditable(e.target)) return;
+      var scroller = horizontalScroller(e.target);
+      if (!scroller) return;
+      drag = {
+        el: scroller,
+        startX: e.clientX,
+        startScroll: scroller.scrollLeft,
+        lastX: e.clientX,
+        lastT: performance.now(),
+        velocity: 0,
+        active: false
+      };
+    },
+    true
+  );
+
+  document.addEventListener(
+    "mousemove",
+    function (e) {
+      if (!drag) return;
+      if (!(e.buttons & 1)) {
+        drag = null;
+        return;
+      }
+      var dx = e.clientX - drag.startX;
+      if (!drag.active) {
+        if (Math.abs(dx) < DRAG_THRESHOLD) return;
+        drag.active = true;
+        clearTimeout(pressTimer); // não abre o menu de "segurar"
+        document.documentElement.classList.add("nv-dragging");
+      }
+      e.preventDefault();
+      drag.el.scrollLeft = drag.startScroll - dx;
+      var now = performance.now();
+      var dt = Math.max(1, now - drag.lastT);
+      drag.velocity = (e.clientX - drag.lastX) / dt; // px por ms
+      drag.lastX = e.clientX;
+      drag.lastT = now;
+    },
+    true
+  );
+
+  function endDrag() {
+    if (!drag) return;
+    var d = drag;
+    drag = null;
+    document.documentElement.classList.remove("nv-dragging");
+    if (!d.active) return;
+    dragJustEnded = true;
+    setTimeout(function () {
+      dragJustEnded = false;
+    }, 0);
+    // Embalo: continua andando e vai freando.
+    var v = d.velocity * 16; // px por quadro
+    if (performance.now() - d.lastT > 80) v = 0;
+    (function glide() {
+      if (Math.abs(v) < 0.5) return;
+      d.el.scrollLeft -= v;
+      v *= 0.92;
+      requestAnimationFrame(glide);
+    })();
+  }
+  document.addEventListener("mouseup", endDrag, true);
+  window.addEventListener("blur", endDrag);
+
+  // Soltar depois de arrastar não conta como clique (não abre o card).
+  window.addEventListener(
+    "click",
+    function (e) {
+      if (!dragJustEnded) return;
+      dragJustEnded = false;
+      stop(e);
+    },
+    true
+  );
+  // Impede o "arrastar imagem" nativo do navegador.
+  document.addEventListener(
+    "dragstart",
+    function (e) {
+      if (horizontalScroller(e.target)) e.preventDefault();
+    },
+    true
+  );
 })();

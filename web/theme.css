@@ -472,6 +472,17 @@ html[data-nuvio-theme="WHITE"]
   filter: brightness(1.15);
 }
 
+/* Arrastando uma fileira: cursor de "agarrar" e sem selecionar texto. */
+html.nv-dragging,
+html.nv-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
+}
+.home-track img,
+.home-track a {
+  -webkit-user-drag: none;
+}
+
 /* ------------------------------------------------------------------ */
 /* Janela de atalhos (?)                                               */
 /* ------------------------------------------------------------------ */
